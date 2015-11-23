@@ -42,9 +42,9 @@ def getData(url):
 
 
 # Get target url
-def getTargetUrl(sourceUrl, className):
+def getTargetUrl(sourceUrl, tag, className):
     originUrl = BeautifulSoup(getData(sourceUrl), 'lxml')
-    targetUrl = originUrl.find_all('a', className)
+    targetUrl = originUrl.find_all(tag, className)
     return targetUrl
 
 
@@ -70,25 +70,34 @@ def getImageData(downloadLink, pageIndex, imageID):
     saveImage(iamgeByte, basePath, pageIndex, imageID, fileType)
 
 
+# get image id
+def getImageID(imageViewLink):
+    dealImageID = BeautifulSoup(getData(imageViewLink), 'lxml')
+    dealImageID = dealImageID.find(id='wallpaperId')
+    imageID = dealImageID.get_text()
+    return imageID
+
 for i in range(startNumber, EnderNumber + 1):
     sourceUrl = baseUrl + str(i)
     pageIndex = i
+    imageID = 0
+    numOfError = 0
 
     print(localTime())
     print(sourceUrl)
     print('Page:' + str(pageIndex) + ' downloading!')
-    imageID = 0
 
-    for link in getTargetUrl(sourceUrl, 'image'):
-        imageID += 1
+    for link in getTargetUrl(sourceUrl, 'a', 'image'):
+        # imageID += 1
         imageViewLink = link.get('href')
         # print(imageViewLink)
         imageViewLink = sourceTitle + imageViewLink
+        imageID = getImageID(imageViewLink)
 
         print(localTime() + ' Image:' + str(imageID) + ' downloading!')
         print(imageViewLink)
 
-        for link in getTargetUrl(imageViewLink, 'download'):
+        for link in getTargetUrl(imageViewLink, 'a', 'download'):
             downloadLink = link.get('href')
             # print(downloadLink)
             downloadLink = sourceTitle + downloadLink
@@ -98,10 +107,11 @@ for i in range(startNumber, EnderNumber + 1):
                 print('------')
 
             except:
+                numOfError += 1
                 print("Spider don't work by some unkonw error.")
                 print('------')
 
         time.sleep(3)
 
-    print('Page:' + pageIndex + ' download successfully')
-    print('------')
+    print('Page:' + str(pageIndex) + ' download successfully')
+    print('********************')
